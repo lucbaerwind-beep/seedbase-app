@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  passwordHash  String
+  companyName   String
+  contactName   String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  seedListings  SeedListing[]
+  inquiries     Inquiry[]     @relation("InquiryRecipient")
+}
+
+model SeedListing {
+  id          String      @id @default(cuid())
+  name        String
+  crop        String
+  description String
+  imageUrl    String?
+  contactInfo String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  owner       User        @relation(fields: [ownerId], references: [id])
+  ownerId     String
+  inquiries   Inquiry[]
+}
+
+model Inquiry {
+  id           String      @id @default(cuid())
+  senderName   String
+  senderEmail  String
+  message      String
+  createdAt    DateTime    @default(now())
+  seedListing  SeedListing @relation(fields: [seedListingId], references: [id])
+  seedListingId String
+  recipient    User        @relation("InquiryRecipient", fields: [recipientId], references: [id])
+  recipientId  String
+}

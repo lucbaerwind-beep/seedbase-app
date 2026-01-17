@@ -73,7 +73,7 @@ export async function getSessionUser() {
   }
   return prisma.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true, companyName: true, contactName: true }
+    select: { id: true, email: true, role: true }
   });
 }
 
@@ -81,6 +81,14 @@ export async function requireSessionUser() {
   const user = await getSessionUser();
   if (!user) {
     throw new Error("Unauthorized");
+  }
+  return user;
+}
+
+export async function requireRole(role: "ADMIN" | "SUPPLIER") {
+  const user = await requireSessionUser();
+  if (user.role !== role) {
+    throw new Error("Forbidden");
   }
   return user;
 }

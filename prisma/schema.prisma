@@ -8,39 +8,112 @@ datasource db {
 }
 
 model User {
-  id            String        @id @default(cuid())
-  email         String        @unique
+  id            String           @id @default(cuid())
+  email         String           @unique
   passwordHash  String
-  companyName   String
-  contactName   String
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  seedListings  SeedListing[]
-  inquiries     Inquiry[]     @relation("InquiryRecipient")
+  role          UserRole         @default(SUPPLIER)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  supplier      SupplierCompany?
+  inquiries     Inquiry[]        @relation("InquiryRecipient")
 }
 
-model SeedListing {
-  id          String      @id @default(cuid())
-  name        String
-  crop        String
-  description String
-  imageUrl    String?
-  contactInfo String
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  owner       User        @relation(fields: [ownerId], references: [id])
-  ownerId     String
-  inquiries   Inquiry[]
+model SupplierCompany {
+  id            String           @id @default(cuid())
+  slug          String           @unique
+  name          String
+  country       String
+  address       String?
+  website       String?
+  email         String?
+  phone         String?
+  description   String?
+  logoUrl       String?
+  cropsFocus    String[]         @default([])
+  certifications Certification[]
+  featured      Boolean          @default(false)
+  approved      Boolean          @default(false)
+  profileViews  Int              @default(0)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  owner         User             @relation(fields: [ownerId], references: [id])
+  ownerId       String           @unique
+  varieties     Variety[]
+  inquiries     Inquiry[]
+}
+
+model Variety {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  name          String
+  crop          String
+  category      String
+  type          VarietyType
+  growingCycle  String?
+  traits        String[]      @default([])
+  description   String?
+  markets       String[]      @default([])
+  availability  String?
+  minOrderNote  String?
+  imageUrls     String[]      @default([])
+  status        VarietyStatus @default(DRAFT)
+  varietyViews  Int           @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  supplier      SupplierCompany @relation(fields: [supplierId], references: [id])
+  supplierId    String
+  tags          Tag[]
+  inquiries     Inquiry[]
 }
 
 model Inquiry {
-  id           String      @id @default(cuid())
+  id           String        @id @default(cuid())
   senderName   String
   senderEmail  String
+  senderCompany String?
+  senderCountry String
   message      String
-  createdAt    DateTime    @default(now())
-  seedListing  SeedListing @relation(fields: [seedListingId], references: [id])
-  seedListingId String
-  recipient    User        @relation("InquiryRecipient", fields: [recipientId], references: [id])
+  status       InquiryStatus @default(NEW)
+  createdAt    DateTime      @default(now())
+  repliedAt    DateTime?
+  supplier     SupplierCompany @relation(fields: [supplierId], references: [id])
+  supplierId   String
+  variety      Variety?      @relation(fields: [varietyId], references: [id])
+  varietyId    String?
+  recipient    User          @relation("InquiryRecipient", fields: [recipientId], references: [id])
   recipientId  String
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  slug      String    @unique
+  varieties Variety[]
+}
+
+model Certification {
+  id        String             @id @default(cuid())
+  name      String             @unique
+  slug      String             @unique
+  companies SupplierCompany[]
+}
+
+enum UserRole {
+  SUPPLIER
+  ADMIN
+}
+
+enum VarietyType {
+  HYBRID
+  OPEN_POLLINATED
+}
+
+enum VarietyStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum InquiryStatus {
+  NEW
+  REPLIED
 }

@@ -22,5 +22,6 @@ export async function POST(request: Request) {
   }
 
   createSession(user.id);
-  return NextResponse.redirect(new URL("/dashboard", request.url));
+  const redirectUrl = user.role === "ADMIN" ? "/admin" : "/dashboard";
+  return NextResponse.redirect(new URL(redirectUrl, request.url));
 }
